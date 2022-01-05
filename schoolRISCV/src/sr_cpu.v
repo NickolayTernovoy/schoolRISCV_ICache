@@ -19,7 +19,7 @@ module sr_cpu
     output          im_req,     // Instruction memory request
     output  [31:0]  imAddr,     // instruction memory address
     input   [31:0]  imData,     // instruction memory data
-    input           im_drdy,
+    input           im_drdy
 );
     //control wires
     wire        aluZero;

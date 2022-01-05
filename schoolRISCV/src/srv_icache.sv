@@ -15,11 +15,9 @@
     input  logic          clk,         // clock
     input  logic          rst_n,       // reset
     input  logic          imem_req_i,  // Memory request
-    input  logic  [31:0]  imAddr,      // instruction memory address                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  q,      // instruction memory address
+    input  logic  [31:0]  imAddr,      // instruction memory address                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
     output logic  [31:0]  imData,      // instruction memory data
     output logic          im_drdy,
-
-    // MIF
     output logic  [31:0]  ext_addr_o,
     output logic          ext_req_o,
     input  logic          ext_rsp_i,
@@ -30,18 +28,19 @@ localparam NWAYS = 32;
 localparam L1I_SIZE = 128;
 localparam TAG_WIDTH  = 32 - $clog2(L1I_SIZE);
 
-logic                  cache_way_en      [NWAYS -1:0];
+logic     [NWAYS -1:0] cache_way_en      ;
 logic [L1I_SIZE  -1:0] cache_data_ff     [NWAYS -1:0];
 logic [TAG_WIDTH -1:0] cache_tag_ff      [NWAYS -1:0];
-logic                  cache_state_ff    [2*NWAYS -1:0];
-logic                  cache_state_next  [2*NWAYS -1:0];
-logic                  cache_state_en;
-logic                  plru_set          [NWAYS -1:0];
-logic                  cache_plru        [NWAYS -1:0];
-logic                  cache_valid       [NWAYS -1:0];
-logic                  cache_plru_new    [NWAYS -1:0];
-logic                  cache_valid_new   [NWAYS -1:0];
-logic                  cache_vict        [NWAYS -1:0];
+logic   [2*NWAYS -1:0] cache_state_ff    ;
+logic   [2*NWAYS -1:0] cache_state_next  ;
+logic                  cache_state_en    ;
+logic    [NWAYS -1:0]  plru_set          ;
+logic    [NWAYS -1:0]  cache_plru        ;
+logic    [NWAYS -1:0]  cache_valid       ;
+logic    [NWAYS -1:0]  cache_plru_new    ;
+logic    [NWAYS -1:0]  cache_valid_new   ;
+logic    [NWAYS -1:0]  cache_vict        ;
+
 
 logic [31:0]           req_addr_ff;
 logic                  l1i_req_val_ff;
@@ -73,7 +72,7 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
 
   assign in_tag = imem_req_i ? imAddr[31 -:TAG_WIDTH] : req_addr_ff[31 -:TAG_WIDTH];
 
-  assign cl_ofs = imem_req_i ? imAddr[3:2] :req_addr_ff[3:2];
+  assign cl_offs = imem_req_i ? imAddr[3:2] :req_addr_ff[3:2];
 
 
   // Hit/Miss detection and data bypass interface
@@ -87,10 +86,10 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
   always_comb begin
     hit_data    = '0;
     for (integer idx = 0 ; idx < NWAYS; idx = idx + 1)
-      hit_data    |= {31{ cl_hit_vec[idx]}} & cache_data_ff[idx][32*cl_ofs +:32];
+      hit_data    |= {31{ cl_hit_vec[idx]}} & cache_data_ff[idx][32*cl_offs +:32];
   end
 
-  assign rsp_data_next = cl_hit ? hit_data : ext_data_i[32*cl_ofs +:32];
+  assign rsp_data_next = cl_hit ? hit_data : ext_data_i[32*cl_offs +:32];
   always_ff @(posedge clk )
     if (cl_hit | ext_rsp_i)
       rsp_data_ff <= rsp_data_next;
@@ -116,12 +115,12 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
       cl_refill_data_ff <= ext_data_i;
 
   // Refill logic
-  always_comb begin
-    cache_vict[0] = &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0];
-    for (integer way_idx = 1; way_idx < NWAYS; way_idx = way_idx + 1)
-      cache_vict[way_idx] = &(cache_valid) ? (~cache_plru[way_idx] & &(cache_plru[way_idx -1 : 0]))
+  
+    assign cache_vict[0] = &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0];
+    for (genvar way_idx = 1; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_vict
+      assign cache_vict[way_idx] = &(cache_valid) ? (~cache_plru[way_idx] & &(cache_plru[way_idx -1 : 0]))
                                            : (~cache_valid[way_idx] & &(cache_valid[way_idx -1 : 0]));
-  end
+    end : g_vict
 
   assign cache_plru       = cache_state_ff[NWAYS+:NWAYS];
   assign cache_valid      = cache_state_ff[NWAYS-1:0];
@@ -129,8 +128,8 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
   assign cache_state_en   = (cl_hit & l1i_req_val_ff ) | cl_refill_ff;
   assign cache_valid_new  = (cache_valid | cache_vict);
   assign plru_set         = (cl_hit ? cl_hit_vec : cache_vict);
-  assign cache_plru_new   = &(cache_plru | cache_set) ? cache_set
-                                                      : (cache_plru | cache_set);
+  assign cache_plru_new   = &(cache_plru | plru_set) ? plru_set
+                                                      : (cache_plru | plru_set);
 
   assign cache_state_next = {cache_plru_new, cache_valid_new};
 
@@ -139,7 +138,7 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
   always_ff @(posedge clk or negedge rst_n)
     if(~rst_n)
       cache_state_ff <= '0;
-    else (cache_state_en)
+    else if (cache_state_en)
       cache_state_ff <= cache_state_next;
 
     for (genvar way_idx = 0; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_cache_memories

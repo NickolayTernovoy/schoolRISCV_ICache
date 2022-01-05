@@ -23,7 +23,18 @@ module sm_top
     wire    [ 3:0 ] devide;
     wire            enable;
     wire    [ 4:0 ] addr;
-
+    //instruction memory
+    wire    [31:0]  imAddr;
+    wire    [31:0]  imData;
+    wire            im_req;
+    wire            im_drdy;
+    wire     [31:0] ext_addr;
+    wire            ext_req;
+    wire            ext_rsp;
+    wire    [127:0] ext_data;
+    wire    [31:0]  rom_data;
+    wire    [31:0]  rom_addr;
+    
     sm_debouncer #(.SIZE(4)) f0(clkIn, clkDevide, devide);
     sm_debouncer #(.SIZE(1)) f1(clkIn, clkEnable, enable);
     sm_debouncer #(.SIZE(5)) f2(clkIn, regAddr,   addr  );
@@ -39,17 +50,7 @@ module sm_top
         .clkOut     ( clk       )
     );
 
-    //instruction memory
-    wire    [31:0]  imAddr;
-    wire    [31:0]  imData;
-    wire            im_req;
-    wire            im_drdy;
-    wire     [31:0] ext_addr;
-    wire            ext_req;
-    wire            ext_rsp;
-    wire    [127:0] ext_data;
-    wire    [31:0]  rom_data;
-    wire    [31:0]  rom_addr;
+
 
     sm_rom reset_rom(rom_addr, rom_data);
 
@@ -64,20 +65,6 @@ module sm_top
     .rom_addr_o (rom_addr )
     );
 
-    srv_icache sm_icache
-    (
-     .clk        (clk     ),
-     .rst_n      (rst_n   ),
-     .imem_req_i (im_req  ),
-     .imAddr     (imAddr  ),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      q,      // instruction memory address
-     .imData     (imData  ),
-     .im_drdy    (im_drdy ),
-     .ext_addr_o (ext_addr),
-     .ext_req_o  (ext_req ),
-     .ext_rsp_i  (ext_rsp ),
-     .ext_data_i (ext_data)
-    );
-
     sr_cpu sm_cpu
     (
         .clk        ( clk       ),
@@ -88,6 +75,20 @@ module sm_top
         .imAddr     ( imAddr    ),
         .imData     ( imData    ),
         .im_drdy    ( im_drdy   )
+    );
+    
+    srv_icache sm_icache
+    (
+     .clk        (clk     ),
+     .rst_n      (rst_n   ),
+     .imem_req_i (im_req  ),
+     .imAddr     (imAddr  ),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+     .imData     (imData  ),
+     .im_drdy    (im_drdy ),
+     .ext_addr_o (ext_addr),
+     .ext_req_o  (ext_req ),
+     .ext_rsp_i  (ext_rsp ),
+     .ext_data_i (ext_data)
     );
 
 endmodule

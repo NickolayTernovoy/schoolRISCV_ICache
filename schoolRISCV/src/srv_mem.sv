@@ -56,9 +56,9 @@
 
     always_ff @(posedge clk)
       if (cl_data_en[rd_idx])
-        cl_data_ff[idx] <= rom_data_i;
+        cl_data_ff[rd_idx] <= rom_data_i;
 
-    assign ext_data_o[idx] = ( idx == RD_NUM_WIDTH -1 ) ? ram_dout : cl_data_ff[idx] ;
+    assign ext_data_o[rd_idx] = ( rd_idx == RD_NUM_WIDTH -1 ) ? ram_dout : cl_data_ff[rd_idx] ;
 
   end : g_rd
 
