@@ -1,12 +1,12 @@
 /*
- * schoolRISCV - small RISC-V CPU 
+ * schoolRISCV - small RISC-V CPU
  *
- * originally based on Sarah L. Harris MIPS CPU 
+ * originally based on Sarah L. Harris MIPS CPU
  *                   & schoolMIPS project
- * 
- * Copyright(c) 2017-2020 Stanislav Zhelnio 
- *                        Aleksandr Romanov 
- */ 
+ *
+ * Copyright(c) 2017-2020 Stanislav Zhelnio
+ *                        Aleksandr Romanov
+ */
 
 //hardware top level module
 module sm_top
@@ -42,7 +42,41 @@ module sm_top
     //instruction memory
     wire    [31:0]  imAddr;
     wire    [31:0]  imData;
-    sm_rom reset_rom(imAddr, imData);
+    wire            im_req;
+    wire            im_drdy;
+    wire     [31:0] ext_addr;
+    wire            ext_req;
+    wire            ext_rsp;
+    wire    [127:0] ext_data;
+    wire    [31:0]  rom_data;
+    wire    [31:0]  rom_addr;
+
+    sm_rom reset_rom(rom_addr, rom_data);
+
+    srv_mem mem_ctrl(
+    .clk        (clk      ),
+    .rst_n      (rst_n    ),
+    .ext_addr_i (ext_addr ),
+    .ext_req_i  (ext_req  ),
+    .ext_rsp_o  (ext_rsp  ),
+    .ext_data_o (ext_data ),
+    .rom_data_i (rom_data ),
+    .rom_addr_o (rom_addr )
+    );
+
+    srv_icache sm_icache
+    (
+     .clk        (clk     ),
+     .rst_n      (rst_n   ),
+     .imem_req_i (im_req  ),
+     .imAddr     (imAddr  ),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      q,      // instruction memory address
+     .imData     (imData  ),
+     .im_drdy    (im_drdy ),
+     .ext_addr_o (ext_addr),
+     .ext_req_o  (ext_req ),
+     .ext_rsp_i  (ext_rsp ),
+     .ext_data_i (ext_data)
+    );
 
     sr_cpu sm_cpu
     (
@@ -50,8 +84,10 @@ module sm_top
         .rst_n      ( rst_n     ),
         .regAddr    ( addr      ),
         .regData    ( regData   ),
+        .im_req     ( im_req    ),
         .imAddr     ( imAddr    ),
-        .imData     ( imData    )
+        .imData     ( imData    ),
+        .im_drdy    ( im_drdy   )
     );
 
 endmodule
@@ -92,6 +128,6 @@ module sm_clk_divider
     wire [31:0] cntrNext = cntr + 1;
     sm_register_we r_cntr(clkIn, rst_n, enable, cntrNext, cntr);
 
-    assign clkOut = bypass ? clkIn 
+    assign clkOut = bypass ? clkIn
                            : cntr[shift + devide];
 endmodule

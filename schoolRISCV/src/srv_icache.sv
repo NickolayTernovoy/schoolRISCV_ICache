@@ -51,6 +51,7 @@ logic            [1:0] cl_offs;
 logic [TAG_WIDTH -1:0] in_tag_ff;
 logic            [1:0] cl_offs_ff;
 logic                  cl_hit;
+logic                  cl_hit_ff;
 logic [31        -1:0] hit_data;
 logic [31        -1:0] rsp_data_next;
 logic [31        -1:0] rsp_data_ff;
@@ -94,7 +95,7 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
     if (cl_hit | ext_rsp_i)
       rsp_data_ff <= rsp_data_next;
 
-  assign im_drdy = cl_hit | cl_refill_ff;
+  assign im_drdy = cl_hit_ff | cl_refill_ff;
   assign imData  = rsp_data_ff;
 
   // Memory interface
@@ -102,10 +103,13 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
   assign ext_addr_o = req_addr_ff;
 
   always_ff @(posedge clk or negedge rst_n)
-    if(~rst_n)
+    if(~rst_n)  begin
+      cl_hit_ff    <= 0;
       cl_refill_ff <= 0;
-    else
+    end else begin
+      cl_hit_ff    <= cl_hit;
       cl_refill_ff <= ext_rsp_i;
+    end
 
   always_ff @(posedge clk)
     if (ext_rsp_i)
