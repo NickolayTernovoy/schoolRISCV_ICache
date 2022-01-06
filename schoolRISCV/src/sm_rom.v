@@ -20,7 +20,8 @@ module sm_rom
     assign rd = rom [a];
 
     initial begin
-        $readmemh ("program.hex", rom);
+        $readmemh ("C:\\Users\\Bogdana\\FILES\\chip_expo\\schoolRISCV_ICache\\schoolRISCV\\program\\02_sqrt\\program.hex", rom);
+        $display ("read");
     end
 
 endmodule

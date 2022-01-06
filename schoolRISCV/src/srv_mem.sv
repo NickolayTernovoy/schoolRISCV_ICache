@@ -23,17 +23,17 @@
 
   localparam DEPTH        = 1024;
   localparam AWIDTH       = 10;
-  localparam RD_NUM_WIDTH = $clog2(128/32);
+  localparam RD_NUM = 128/32;
   localparam MEM_DELAY    = 100;
 
 
   logic [AWIDTH -1:0]        ram_addr_ff;
   logic [31:0]               ram_dout;
-  logic [RD_NUM_WIDTH-1  :0] read_ctr_ff;
+  logic [1  :0] read_ctr_ff;
   logic                      rd_trans_ff;
   logic [6:0]                delay_ctr_ff;
-  logic                      cl_data_en [RD_NUM_WIDTH -1:0];
-  logic [31:0]               cl_data_ff [RD_NUM_WIDTH -1:0];
+  logic                      cl_data_en [RD_NUM -1:0];
+  logic [31:0]               cl_data_ff [RD_NUM -1:0];
 
 
   assign rom_addr_o = ext_req_i ? ext_addr_i : (ram_addr_ff + read_ctr_ff);
@@ -50,7 +50,7 @@
     end
 
 
-  for ( genvar rd_idx = 0 ; rd_idx < RD_NUM_WIDTH -1;  rd_idx = rd_idx + 1 ) begin : g_rd
+  for ( genvar rd_idx = 0 ; rd_idx < RD_NUM;  rd_idx = rd_idx + 1 ) begin : g_rd
 
     assign cl_data_en[rd_idx] = (rd_trans_ff | ext_req_i) & (rd_idx == read_ctr_ff);
 
@@ -58,7 +58,7 @@
       if (cl_data_en[rd_idx])
         cl_data_ff[rd_idx] <= rom_data_i;
 
-    assign ext_data_o[rd_idx] = ( rd_idx == RD_NUM_WIDTH -1 ) ? ram_dout : cl_data_ff[rd_idx] ;
+    assign ext_data_o[rd_idx*32+:32] = cl_data_ff[rd_idx] ;
 
   end : g_rd
 
@@ -66,7 +66,7 @@
   always_ff @(posedge clk or negedge rst_n)
     if (~rst_n)
       delay_ctr_ff <= '0;
-    else if (rd_trans_ff)
+    else if (ext_req_i | |(delay_ctr_ff))
       delay_ctr_ff <= ( delay_ctr_ff == MEM_DELAY ) ? '0 : delay_ctr_ff + 1;
 
     assign ext_rsp_o = ( delay_ctr_ff == MEM_DELAY );

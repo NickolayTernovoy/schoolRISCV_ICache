@@ -77,8 +77,9 @@ module sm_top
         .im_drdy    ( im_drdy   )
     );
     
-    srv_icache sm_icache
-    (
+    srv_icache #(
+    .CACHE_EN(1)
+    ) sm_icache (
      .clk        (clk     ),
      .rst_n      (rst_n   ),
      .imem_req_i (im_req  ),

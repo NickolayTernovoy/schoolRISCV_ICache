@@ -108,24 +108,30 @@ module sm_testbench;
 
     //simulation debug output
     integer cycle; initial cycle = 0;
+   
 
+            
     always @ (posedge clk)
-    begin
+        if (sm_top.sm_cpu.im_drdy) begin 
         $write ("%5d  pc = %2h instr = %h   a0 = %1d", 
                   cycle, sm_top.sm_cpu.pc, sm_top.sm_cpu.instr, sm_top.sm_cpu.rf.rf[10]);
 
         disasmInstr();
 
         $write("\n");
+    
+ //       cycle = cycle + 1;
 
-        cycle = cycle + 1;
-
-        if (cycle > `SIMULATION_CYCLES)
-        begin
-            cycle = 0;
-            $display ("Timeout");
-            $stop;
-        end
+//        if (cycle > `SIMULATION_CYCLES)
+//        begin
+//            cycle = 0;
+//            $display ("Timeout");
+//            $stop;
+//        end
     end
+    
+    always @(posedge clk)
+        if (sm_top.sm_cpu.instr == 32'h63) 
+          $stop;  
 
 endmodule

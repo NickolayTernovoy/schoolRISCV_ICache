@@ -11,7 +11,10 @@
 // Fully associative instruction cache
 
  module srv_icache
-(
+ # (
+    parameter CACHE_EN = 0
+ )
+ (
     input  logic          clk,         // clock
     input  logic          rst_n,       // reset
     input  logic          imem_req_i,  // Memory request
@@ -21,12 +24,12 @@
     output logic  [31:0]  ext_addr_o,
     output logic          ext_req_o,
     input  logic          ext_rsp_i,
-    input  logic  [31:0]  ext_data_i
+    input  logic  [127:0]  ext_data_i
 );
 
-localparam NWAYS = 32;
+localparam NWAYS = 4;
 localparam L1I_SIZE = 128;
-localparam TAG_WIDTH  = 32 - $clog2(L1I_SIZE);
+localparam TAG_WIDTH  = 32 - $clog2(L1I_SIZE/32);
 
 logic     [NWAYS -1:0] cache_way_en      ;
 logic [L1I_SIZE  -1:0] cache_data_ff     [NWAYS -1:0];
@@ -51,13 +54,12 @@ logic [TAG_WIDTH -1:0] in_tag_ff;
 logic            [1:0] cl_offs_ff;
 logic                  cl_hit;
 logic                  cl_hit_ff;
-logic [31        -1:0] hit_data;
-logic [31        -1:0] rsp_data_next;
-logic [31        -1:0] rsp_data_ff;
+logic [31 :0] hit_data;
+logic [31 :0] rsp_data_next;
+logic [31 :0] rsp_data_ff;
 logic [NWAYS     -1:0] cl_hit_vec;
 
 logic cl_refill_ff;
-logic [L1I_SIZE-1:0] cl_refill_data_ff;
 
   // Latch input data;
   always_ff @(posedge clk)
@@ -72,7 +74,7 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
 
   assign in_tag = imem_req_i ? imAddr[31 -:TAG_WIDTH] : req_addr_ff[31 -:TAG_WIDTH];
 
-  assign cl_offs = imem_req_i ? imAddr[3:2] :req_addr_ff[3:2];
+  assign cl_offs = imem_req_i ? imAddr[1:0] :req_addr_ff[1:0];
 
 
   // Hit/Miss detection and data bypass interface
@@ -81,12 +83,12 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
       cl_hit_vec[idx] = (in_tag == cache_tag_ff[idx]) & cache_state_ff[idx];
   end
 
-  assign cl_hit = (|cl_hit_vec);
+  assign cl_hit = (|cl_hit_vec) & CACHE_EN;
 
   always_comb begin
     hit_data    = '0;
     for (integer idx = 0 ; idx < NWAYS; idx = idx + 1)
-      hit_data    |= {31{ cl_hit_vec[idx]}} & cache_data_ff[idx][32*cl_offs +:32];
+      hit_data    |= {32{ cl_hit_vec[idx]}} & cache_data_ff[idx][32*cl_offs +:32];
   end
 
   assign rsp_data_next = cl_hit ? hit_data : ext_data_i[32*cl_offs +:32];
@@ -98,7 +100,7 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
   assign imData  = rsp_data_ff;
 
   // Memory interface
-  assign ext_req_o  = ~cl_hit & l1i_req_val_ff;
+  assign ext_req_o  = ~cl_hit_ff & l1i_req_val_ff;
   assign ext_addr_o = req_addr_ff;
 
   always_ff @(posedge clk or negedge rst_n)
@@ -109,10 +111,6 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
       cl_hit_ff    <= cl_hit;
       cl_refill_ff <= ext_rsp_i;
     end
-
-  always_ff @(posedge clk)
-    if (ext_rsp_i)
-      cl_refill_data_ff <= ext_data_i;
 
   // Refill logic
   
@@ -125,15 +123,15 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
   assign cache_plru       = cache_state_ff[NWAYS+:NWAYS];
   assign cache_valid      = cache_state_ff[NWAYS-1:0];
 
-  assign cache_state_en   = (cl_hit & l1i_req_val_ff ) | cl_refill_ff;
-  assign cache_valid_new  = (cache_valid | cache_vict);
+  assign cache_state_en   = (cl_hit & l1i_req_val_ff ) | ext_rsp_i;
+  assign cache_valid_new  = (cache_valid | ( cache_vict & ~{NWAYS{cl_hit}}));
   assign plru_set         = (cl_hit ? cl_hit_vec : cache_vict);
   assign cache_plru_new   = &(cache_plru | plru_set) ? plru_set
                                                       : (cache_plru | plru_set);
 
   assign cache_state_next = {cache_plru_new, cache_valid_new};
 
-  assign cache_way_en  = cache_vict & {NWAYS{cl_refill_ff}};
+  assign cache_way_en  = cache_vict & {NWAYS{ext_rsp_i}};
 
   always_ff @(posedge clk or negedge rst_n)
     if(~rst_n)
@@ -144,8 +142,8 @@ logic [L1I_SIZE-1:0] cl_refill_data_ff;
     for (genvar way_idx = 0; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_cache_memories
       always_ff @(posedge clk)
         if (cache_way_en[way_idx]) begin
-          cache_data_ff[way_idx] <= cl_refill_data_ff;
-          cache_tag_ff[way_idx]  <= req_addr_ff;
+          cache_data_ff[way_idx] <= ext_data_i;
+          cache_tag_ff[way_idx]  <= in_tag;
         end
 
     end : g_cache_memories
