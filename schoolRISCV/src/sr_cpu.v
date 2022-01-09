@@ -1,12 +1,12 @@
 /*
- * schoolRISCV - small RISC-V CPU 
+ * schoolRISCV - small RISC-V CPU
  *
- * originally based on Sarah L. Harris MIPS CPU 
+ * originally based on Sarah L. Harris MIPS CPU
  *                   & schoolMIPS project
- * 
- * Copyright(c) 2017-2020 Stanislav Zhelnio 
- *                        Aleksandr Romanov 
- */ 
+ *
+ * Copyright(c) 2017-2020 Stanislav Zhelnio
+ *                        Aleksandr Romanov
+ */
 
 `include "sr_cpu.vh"
 
@@ -16,8 +16,10 @@ module sr_cpu
     input           rst_n,      // reset
     input   [ 4:0]  regAddr,    // debug access reg address
     output  [31:0]  regData,    // debug access reg data
+    output          im_req,     // Instruction memory request
     output  [31:0]  imAddr,     // instruction memory address
-    input   [31:0]  imData      // instruction memory data
+    input   [31:0]  imData,     // instruction memory data
+    input           im_drdy
 );
     //control wires
     wire        aluZero;
@@ -43,10 +45,28 @@ module sr_cpu
     wire [31:0] pcBranch = pc + immB;
     wire [31:0] pcPlus4  = pc + 4;
     wire [31:0] pcNext   = pcSrc ? pcBranch : pcPlus4;
-    sm_register r_pc(clk ,rst_n, pcNext, pc);
+    sm_register_we r_pc(clk ,rst_n, im_drdy, pcNext, pc);
+
+    // PWRON detect
+    reg d1;
+    reg d2;
+    wire pwron;
+
+    always @(posedge clk or negedge rst_n)
+      if (~rst_n) begin
+        d1 <= 1;
+        d2 <= 1;
+      end else begin
+        d1 <= 0;
+        d2 <= d1;
+      end
+
+    assign pwron = ~d1 & d2;
 
     //program memory access
-    assign imAddr = pc >> 2;
+    assign imAddr = im_drdy ? (pcNext >> 2) : (pc >> 2);
+    assign im_req = im_drdy | pwron;
+
     wire [31:0] instr = imData;
 
     //instruction decode
@@ -60,7 +80,7 @@ module sr_cpu
         .cmdF7      ( cmdF7        ),
         .immI       ( immI         ),
         .immB       ( immB         ),
-        .immU       ( immU         ) 
+        .immU       ( immU         )
     );
 
     //register file
@@ -94,7 +114,7 @@ module sr_cpu
         .srcB       ( srcB         ),
         .oper       ( aluControl   ),
         .zero       ( aluZero      ),
-        .result     ( aluResult    ) 
+        .result     ( aluResult    )
     );
 
     assign wd3 = wdSrc ? immU : aluResult;
@@ -109,7 +129,7 @@ module sr_cpu
         .regWrite   ( regWrite     ),
         .aluSrc     ( aluSrc       ),
         .wdSrc      ( wdSrc        ),
-        .aluControl ( aluControl   ) 
+        .aluControl ( aluControl   )
     );
 
 endmodule
@@ -125,7 +145,7 @@ module sr_decode
     output     [ 6:0] cmdF7,
     output reg [31:0] immI,
     output reg [31:0] immB,
-    output reg [31:0] immU 
+    output reg [31:0] immU
 );
     assign cmdOp = instr[ 6: 0];
     assign rd    = instr[11: 7];
@@ -163,8 +183,8 @@ module sr_control
     input     [ 2:0] cmdF3,
     input     [ 6:0] cmdF7,
     input            aluZero,
-    output           pcSrc, 
-    output reg       regWrite, 
+    output           pcSrc,
+    output reg       regWrite,
     output reg       aluSrc,
     output reg       wdSrc,
     output reg [2:0] aluControl

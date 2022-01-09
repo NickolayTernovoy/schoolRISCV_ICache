@@ -1,12 +1,12 @@
 /*
- * schoolRISCV - small RISC-V CPU 
+ * schoolRISCV - small RISC-V CPU
  *
- * originally based on Sarah L. Harris MIPS CPU 
+ * originally based on Sarah L. Harris MIPS CPU
  *                   & schoolMIPS project
- * 
- * Copyright(c) 2017-2020 Stanislav Zhelnio 
- *                        Aleksandr Romanov 
- */ 
+ *
+ * Copyright(c) 2017-2020 Stanislav Zhelnio
+ *                        Aleksandr Romanov
+ */
 
 //hardware top level module
 module sm_top
@@ -23,7 +23,18 @@ module sm_top
     wire    [ 3:0 ] devide;
     wire            enable;
     wire    [ 4:0 ] addr;
-
+    //instruction memory
+    wire    [31:0]  imAddr;
+    wire    [31:0]  imData;
+    wire            im_req;
+    wire            im_drdy;
+    wire     [31:0] ext_addr;
+    wire            ext_req;
+    wire            ext_rsp;
+    wire    [127:0] ext_data;
+    wire    [31:0]  rom_data;
+    wire    [31:0]  rom_addr;
+    
     sm_debouncer #(.SIZE(4)) f0(clkIn, clkDevide, devide);
     sm_debouncer #(.SIZE(1)) f1(clkIn, clkEnable, enable);
     sm_debouncer #(.SIZE(5)) f2(clkIn, regAddr,   addr  );
@@ -39,10 +50,20 @@ module sm_top
         .clkOut     ( clk       )
     );
 
-    //instruction memory
-    wire    [31:0]  imAddr;
-    wire    [31:0]  imData;
-    sm_rom reset_rom(imAddr, imData);
+
+
+    sm_rom reset_rom(rom_addr, rom_data);
+
+    srv_mem mem_ctrl(
+    .clk        (clk      ),
+    .rst_n      (rst_n    ),
+    .ext_addr_i (ext_addr ),
+    .ext_req_i  (ext_req  ),
+    .ext_rsp_o  (ext_rsp  ),
+    .ext_data_o (ext_data ),
+    .rom_data_i (rom_data ),
+    .rom_addr_o (rom_addr )
+    );
 
     sr_cpu sm_cpu
     (
@@ -50,8 +71,25 @@ module sm_top
         .rst_n      ( rst_n     ),
         .regAddr    ( addr      ),
         .regData    ( regData   ),
+        .im_req     ( im_req    ),
         .imAddr     ( imAddr    ),
-        .imData     ( imData    )
+        .imData     ( imData    ),
+        .im_drdy    ( im_drdy   )
+    );
+    
+    srv_icache #(
+    .CACHE_EN(1)
+    ) sm_icache (
+     .clk        (clk     ),
+     .rst_n      (rst_n   ),
+     .imem_req_i (im_req  ),
+     .imAddr     (imAddr  ),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+     .imData     (imData  ),
+     .im_drdy    (im_drdy ),
+     .ext_addr_o (ext_addr),
+     .ext_req_o  (ext_req ),
+     .ext_rsp_i  (ext_rsp ),
+     .ext_data_i (ext_data)
     );
 
 endmodule
@@ -92,6 +130,6 @@ module sm_clk_divider
     wire [31:0] cntrNext = cntr + 1;
     sm_register_we r_cntr(clkIn, rst_n, enable, cntrNext, cntr);
 
-    assign clkOut = bypass ? clkIn 
+    assign clkOut = bypass ? clkIn
                            : cntr[shift + devide];
 endmodule
