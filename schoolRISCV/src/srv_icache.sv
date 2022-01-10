@@ -27,7 +27,7 @@
     input  logic  [127:0]  ext_data_i
 );
 
-localparam NWAYS = 4;
+localparam NWAYS = 2;
 localparam L1I_SIZE = 128;
 localparam TAG_WIDTH  = 32 - $clog2(L1I_SIZE/32);
 
@@ -101,7 +101,7 @@ logic cl_refill_ff;
 
   // Memory interface
   assign ext_req_o  = ~cl_hit_ff & l1i_req_val_ff;
-  assign ext_addr_o = req_addr_ff;
+  assign ext_addr_o = {req_addr_ff[31-:TAG_WIDTH], 2'b0};
 
   always_ff @(posedge clk or negedge rst_n)
     if(~rst_n)  begin
