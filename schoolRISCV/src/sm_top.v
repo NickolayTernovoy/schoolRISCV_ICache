@@ -78,7 +78,7 @@ module sm_top
     );
     
     srv_icache #(
-    .CACHE_EN(1)
+    .CACHE_EN(0)
     ) sm_icache (
      .clk        (clk     ),
      .rst_n      (rst_n   ),

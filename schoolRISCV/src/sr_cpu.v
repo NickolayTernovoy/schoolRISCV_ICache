@@ -102,6 +102,8 @@ module sr_cpu
         .we3        ( regWrite     )
     );
 
+    
+
     //debug register access
     assign regData = (regAddr != 0) ? rd0 : pc;
 
@@ -129,8 +131,27 @@ module sr_cpu
         .regWrite   ( regWrite     ),
         .aluSrc     ( aluSrc       ),
         .wdSrc      ( wdSrc        ),
+        .mem_write  ( mem_write    ),
         .aluControl ( aluControl   )
     );
+    
+    
+    // access to cycle_cnt
+    wire [31:0] addr_o;
+    wire [31:0] data_o;
+    reg   cnt_cycle_en_ff;
+    assign addr_o = aluResult;
+    assign data_o = rd2;
+    
+    always @(posedge clk or negedge rst_n) begin 
+     if (~rst_n) begin
+      cnt_cycle_en_ff <= 1'b0;
+     end
+     else begin
+     if (data_o == 32'bx) cnt_cycle_en_ff <= data_o[0];
+     end
+    end
+    
 
 endmodule
 
@@ -187,6 +208,7 @@ module sr_control
     output reg       regWrite,
     output reg       aluSrc,
     output reg       wdSrc,
+    output reg       mem_write,
     output reg [2:0] aluControl
 );
     reg          branch;
@@ -199,6 +221,7 @@ module sr_control
         regWrite    = 1'b0;
         aluSrc      = 1'b0;
         wdSrc       = 1'b0;
+        mem_write   = 1'b0;
         aluControl  = `ALU_ADD;
 
         casez( {cmdF7, cmdF3, cmdOp} )
@@ -213,6 +236,7 @@ module sr_control
 
             { `RVF7_ANY,  `RVF3_BEQ,  `RVOP_BEQ  } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUB; end
             { `RVF7_ANY,  `RVF3_BNE,  `RVOP_BNE  } : begin branch = 1'b1; aluControl = `ALU_SUB; end
+            { `RVF7_ANY,  `RVF3_SW,   `RVOP_SW  } : begin mem_write = 1'b1; aluControl = `ALU_ADD; end
         endcase
     end
 endmodule

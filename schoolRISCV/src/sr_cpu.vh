@@ -16,6 +16,7 @@
 `define ALU_SUB     3'b100
 
 // instruction opcode
+`define RVOP_SW     7'b0100011
 `define RVOP_ADDI   7'b0010011
 `define RVOP_BEQ    7'b1100011
 `define RVOP_LUI    7'b0110111
@@ -35,6 +36,7 @@
 `define RVF3_SRL    3'b101
 `define RVF3_SLTU   3'b011
 `define RVF3_SUB    3'b000
+`define RVF3_SW     3'b010
 `define RVF3_ANY    3'b???
 
 // instruction funct7

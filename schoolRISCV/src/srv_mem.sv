@@ -24,7 +24,7 @@
   localparam DEPTH        = 1024;
   localparam AWIDTH       = 10;
   localparam RD_NUM = 128/32;
-  localparam MEM_DELAY    = 100;
+  localparam MEM_DELAY    = 10;
 
 
   logic [AWIDTH -1:0]        ram_addr_ff;
