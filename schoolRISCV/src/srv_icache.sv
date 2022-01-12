@@ -61,6 +61,8 @@ logic [NWAYS     -1:0] cl_hit_vec;
 
 logic cl_refill_ff;
 
+genvar way_idx;
+
   // Latch input data;
   always_ff @(posedge clk)
     if (imem_req_i)
@@ -114,11 +116,14 @@ logic cl_refill_ff;
 
   // Refill logic
 
-    assign cache_vict[0] = &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0];
-    for (genvar way_idx = 1; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_vict
+  assign cache_vict[0] = &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0];
+
+  generate
+    for (way_idx = 1; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_vict
       assign cache_vict[way_idx] = &(cache_valid) ? (~cache_plru[way_idx] & &(cache_plru[way_idx -1 : 0]))
-                                           : (~cache_valid[way_idx] & &(cache_valid[way_idx -1 : 0]));
+                                          : (~cache_valid[way_idx] & &(cache_valid[way_idx -1 : 0]));
     end : g_vict
+  endgenerate
 
   assign cache_plru       = cache_state_ff[NWAYS+:NWAYS];
   assign cache_valid      = cache_state_ff[NWAYS-1:0];
@@ -139,7 +144,8 @@ logic cl_refill_ff;
     else if (cache_state_en)
       cache_state_ff <= cache_state_next;
 
-    for (genvar way_idx = 0; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_cache_memories
+  generate
+    for (way_idx = 0; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_cache_memories
       always_ff @(posedge clk)
         if (cache_way_en[way_idx]) begin
           cache_data_ff[way_idx] <= ext_data_i;
@@ -147,6 +153,7 @@ logic cl_refill_ff;
         end
 
     end : g_cache_memories
+  endgenerate
 
 
 endmodule

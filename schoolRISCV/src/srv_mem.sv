@@ -35,6 +35,7 @@
   logic                      cl_data_en [RD_NUM -1:0];
   logic [31:0]               cl_data_ff [RD_NUM -1:0];
 
+  genvar rd_idx;
 
   assign rom_addr_o = ext_req_i ? ext_addr_i : (ram_addr_ff + read_ctr_ff);
 
@@ -49,18 +50,19 @@
       ram_addr_ff <= ext_req_i ? ext_addr_i : ram_addr_ff;
     end
 
+  generate
+    for (rd_idx = 0 ; rd_idx < RD_NUM;  rd_idx = rd_idx + 1) begin : g_rd
 
-  for ( genvar rd_idx = 0 ; rd_idx < RD_NUM;  rd_idx = rd_idx + 1 ) begin : g_rd
+      assign cl_data_en[rd_idx] = (rd_trans_ff | ext_req_i) & (rd_idx == read_ctr_ff);
 
-    assign cl_data_en[rd_idx] = (rd_trans_ff | ext_req_i) & (rd_idx == read_ctr_ff);
+      always_ff @(posedge clk)
+        if (cl_data_en[rd_idx])
+          cl_data_ff[rd_idx] <= rom_data_i;
 
-    always_ff @(posedge clk)
-      if (cl_data_en[rd_idx])
-        cl_data_ff[rd_idx] <= rom_data_i;
+      assign ext_data_o[rd_idx*32+:32] = cl_data_ff[rd_idx] ;
 
-    assign ext_data_o[rd_idx*32+:32] = cl_data_ff[rd_idx] ;
-
-  end : g_rd
+    end : g_rd
+  endgenerate
 
   // Primitive RAM Delay model
   always_ff @(posedge clk or negedge rst_n)

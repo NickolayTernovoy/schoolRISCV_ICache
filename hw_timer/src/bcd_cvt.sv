@@ -61,8 +61,9 @@ assign resp_cnt_next = (bcd_fsm == S_WRITE) ? (resp_cnt + DIGIT_CNT_WIDTH'(1'd1)
 
 assign resp_next = (bcd_fsm == S_WRITE) ? ((resp_cnt == 0) ? DEC_DIGITS'(1'd1) : {resp_o[DEC_DIGITS-2:0], 1'd0}) : '0;
 
+genvar i;
 generate
-  for (genvar i = 0; i < DEC_DIGITS; i++) begin
+  for (i = 0; i < DEC_DIGITS; i++) begin : g_dec_digits
     assign dec_digits_next[i] = (bcd_fsm == S_IDLE) ? '0 :
                                 (bcd_fsm == S_SHIFT) ? dec_digits_shifted[i] :
                                 ((bcd_fsm == S_ADD) && (i == digit_idx) && (dec_digits[i] > 4'd4)) ? dec_digits[i] + 4'd3 :
