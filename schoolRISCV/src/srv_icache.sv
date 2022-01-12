@@ -12,7 +12,7 @@
 
  module srv_icache
  # (
-    parameter CACHE_EN = 0
+    parameter bit CACHE_EN = 1'b0
  )
  (
     input  logic          clk,         // clock

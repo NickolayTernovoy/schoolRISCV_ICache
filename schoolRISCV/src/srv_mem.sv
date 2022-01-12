@@ -46,8 +46,8 @@
       ram_addr_ff <= '0;
     end else begin
       rd_trans_ff <= ext_req_i | (rd_trans_ff & ~&read_ctr_ff);
-      read_ctr_ff <= (rd_trans_ff | ext_req_i) ? (read_ctr_ff + 1) : read_ctr_ff;
-      ram_addr_ff <= ext_req_i ? ext_addr_i : ram_addr_ff;
+      read_ctr_ff <= (rd_trans_ff | ext_req_i) ? 2'(read_ctr_ff + 2'b1) : read_ctr_ff;
+      ram_addr_ff <= ext_req_i ? ext_addr_i[AWIDTH-1:0] : ram_addr_ff;
     end
 
   generate
@@ -69,7 +69,7 @@
     if (~rst_n)
       delay_ctr_ff <= '0;
     else if (ext_req_i | |(delay_ctr_ff))
-      delay_ctr_ff <= ( delay_ctr_ff == MEM_DELAY ) ? '0 : delay_ctr_ff + 1;
+      delay_ctr_ff <= ( delay_ctr_ff == MEM_DELAY ) ? '0 : 7'(delay_ctr_ff + 7'b1);
 
     assign ext_rsp_o = ( delay_ctr_ff == MEM_DELAY );
  endmodule

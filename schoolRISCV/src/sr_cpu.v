@@ -27,6 +27,7 @@ module sr_cpu
     wire        regWrite;
     wire        aluSrc;
     wire        wdSrc;
+    wire        mem_write;
     wire  [2:0] aluControl;
 
     //instruction decode wires
@@ -144,12 +145,12 @@ module sr_cpu
     assign data_o = rd2;
 
     always @(posedge clk or negedge rst_n) begin
-     if (~rst_n) begin
-      cnt_cycle_en_ff <= 1'b0;
-     end
-     else begin
-     if (data_o == 32'bx) cnt_cycle_en_ff <= data_o[0];
-     end
+        if (~rst_n) begin
+            cnt_cycle_en_ff <= 1'b0;
+        end
+        else begin
+            if (data_o == 32'h1000_0000) cnt_cycle_en_ff <= data_o[0];
+        end
     end
 
 
@@ -236,7 +237,7 @@ module sr_control
 
             { `RVF7_ANY,  `RVF3_BEQ,  `RVOP_BEQ  } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUB; end
             { `RVF7_ANY,  `RVF3_BNE,  `RVOP_BNE  } : begin branch = 1'b1; aluControl = `ALU_SUB; end
-            { `RVF7_ANY,  `RVF3_SW,   `RVOP_SW  } : begin mem_write = 1'b1; aluControl = `ALU_ADD; end
+            { `RVF7_ANY,  `RVF3_SW,   `RVOP_SW   } : begin mem_write = 1'b1; aluControl = `ALU_ADD; end
         endcase
     end
 endmodule
