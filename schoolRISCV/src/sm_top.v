@@ -34,7 +34,7 @@ module sm_top
     wire    [127:0] ext_data;
     wire    [31:0]  rom_data;
     wire    [31:0]  rom_addr;
-    
+
     sm_debouncer #(.SIZE(4)) f0(clkIn, clkDevide, devide);
     sm_debouncer #(.SIZE(1)) f1(clkIn, clkEnable, enable);
     sm_debouncer #(.SIZE(5)) f2(clkIn, regAddr,   addr  );
@@ -76,14 +76,14 @@ module sm_top
         .imData     ( imData    ),
         .im_drdy    ( im_drdy   )
     );
-    
+
     srv_icache #(
     .CACHE_EN(0)
     ) sm_icache (
      .clk        (clk     ),
      .rst_n      (rst_n   ),
      .imem_req_i (im_req  ),
-     .imAddr     (imAddr  ),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+     .imAddr     (imAddr  ),
      .imData     (imData  ),
      .im_drdy    (im_drdy ),
      .ext_addr_o (ext_addr),

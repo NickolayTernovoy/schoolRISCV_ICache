@@ -18,7 +18,7 @@
     input  logic          clk,         // clock
     input  logic          rst_n,       // reset
     input  logic          imem_req_i,  // Memory request
-    input  logic  [31:0]  imAddr,      // instruction memory address                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+    input  logic  [31:0]  imAddr,      // instruction memory address
     output logic  [31:0]  imData,      // instruction memory data
     output logic          im_drdy,
     output logic  [31:0]  ext_addr_o,
@@ -113,7 +113,7 @@ logic cl_refill_ff;
     end
 
   // Refill logic
-  
+
     assign cache_vict[0] = &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0];
     for (genvar way_idx = 1; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_vict
       assign cache_vict[way_idx] = &(cache_valid) ? (~cache_plru[way_idx] & &(cache_plru[way_idx -1 : 0]))

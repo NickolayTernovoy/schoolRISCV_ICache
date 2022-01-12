@@ -1,12 +1,12 @@
 /*
- * schoolRISCV - small RISC-V CPU 
+ * schoolRISCV - small RISC-V CPU
  *
- * originally based on Sarah L. Harris MIPS CPU 
+ * originally based on Sarah L. Harris MIPS CPU
  *                   & schoolMIPS project
- * 
- * Copyright(c) 2017-2020 Stanislav Zhelnio 
- *                        Aleksandr Romanov 
- */ 
+ *
+ * Copyright(c) 2017-2020 Stanislav Zhelnio
+ *                        Aleksandr Romanov
+ */
 
 module sm_hex_display
 (
@@ -26,7 +26,7 @@ module sm_hex_display
         'h7: seven_segments = 'b1111000;  //  |     |
         'h8: seven_segments = 'b0000000;  //  e     c
         'h9: seven_segments = 'b0011000;  //  |     |
-        'ha: seven_segments = 'b0001000;  //   --d-- 
+        'ha: seven_segments = 'b0001000;  //   --d--
         'hb: seven_segments = 'b0000011;
         'hc: seven_segments = 'b1000110;
         'hd: seven_segments = 'b0100001;
@@ -62,7 +62,7 @@ module sm_hex_display_8
         'h7: bcd_to_seg = 'b1111000;  //  |     |
         'h8: bcd_to_seg = 'b0000000;  //  e     c
         'h9: bcd_to_seg = 'b0011000;  //  |     |
-        'ha: bcd_to_seg = 'b0001000;  //   --d-- 
+        'ha: bcd_to_seg = 'b0001000;  //   --d--
         'hb: bcd_to_seg = 'b0000011;
         'hc: bcd_to_seg = 'b1000110;
         'hd: bcd_to_seg = 'b0100001;
