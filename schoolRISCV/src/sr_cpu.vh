@@ -15,6 +15,11 @@
 `define ALU_SLTU    3'b011
 `define ALU_SUB     3'b100
 
+// ALU source B control signal encoding
+`define SRC_B_RD2   2'b00
+`define SRC_B_IMM_I 2'b01
+`define SRC_B_IMM_S 2'b10
+
 // instruction opcode
 `define RVOP_SW     7'b0100011
 `define RVOP_ADDI   7'b0010011
