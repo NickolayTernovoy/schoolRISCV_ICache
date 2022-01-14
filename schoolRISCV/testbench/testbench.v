@@ -120,7 +120,7 @@ module sm_testbench;
 
         $write("\n");
     
- //       cycle = cycle + 1;
+        cycle = cycle + 1;
 
 //        if (cycle > `SIMULATION_CYCLES)
 //        begin
