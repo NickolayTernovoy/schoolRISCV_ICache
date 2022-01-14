@@ -10,6 +10,9 @@
 
 //hardware top level module
 module sm_top
+#( 
+  parameter CACHE_EN = 1
+)
 (
     input           clkIn,
     input           rst_n,
@@ -87,7 +90,7 @@ module sm_top
     );
 
     srv_icache #(
-    .CACHE_EN(0)
+    .CACHE_EN(CACHE_EN)
     ) sm_icache (
      .clk        (clk     ),
      .rst_n      (rst_n   ),

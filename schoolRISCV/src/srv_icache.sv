@@ -116,7 +116,10 @@ genvar way_idx;
 
   // Refill logic
 
-  assign cache_vict[0] = &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0];
+   //if (NWAYS==1)
+   //     assign cache_vict[0] = '1;
+   // else
+        assign cache_vict[0] = &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0];
 
   generate
     for (way_idx = 1; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_vict
