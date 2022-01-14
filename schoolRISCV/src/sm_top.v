@@ -108,14 +108,14 @@ module sm_top
     always @(posedge clk or negedge rst_n)
         if (~rst_n)
             cnt_en_ff <= 1'b0;
-        else if (memWrite && (mem_addr == 32'h1000_0000))
+        else if (memWrite && (mem_addr == 32'h200))
             cnt_en_ff <= mem_data[0];
 
     // cycle counter clear signal
     always @(posedge clk or negedge rst_n)
         if (~rst_n)
             cnt_clear_ff <= 1'b0;
-        else if (memWrite && (mem_addr == 32'h1000_0001))
+        else if (memWrite && (mem_addr == 32'h201))
             cnt_clear_ff <= mem_data[0];
 
     cycle_counter i_cycle_cnt (
@@ -123,7 +123,7 @@ module sm_top
         .rst_n      (rst_n       ),
         .en_i       (cnt_en_ff   ),
         .clear_i    (cnt_clear_ff),
-        .cycleCnt_o (cycleCnt_o  ),
+        .cycleCnt_o (cycleCnt_o  )
     );
 
 endmodule
@@ -166,24 +166,4 @@ module sm_clk_divider
 
     assign clkOut = bypass ? clkIn
                            : cntr[shift + devide];
-endmodule
-
-
-module cycle_counter (
-    input             clk,
-    input             rst_n,
-    input             en_i,
-    input             clear_i,
-    output reg [31:0] cycleCnt_o
-);
-
-wire [31:0] cycleCnt_next;
-
-assign cycleCnt_next = clear_i ? 32'd0 : (en_i ? cycleCnt_o + 32'd1 : cycleCnt_o);
-
-// cycle counter
-always @(posedge clk or negedge rst_n)
-    if (~rst_n) cycleCnt_o <= 32'd0;
-    else        cycleCnt_o <= cycleCnt_next;
-
 endmodule
