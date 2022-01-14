@@ -18,7 +18,7 @@ module rzrd
     wire          clkCpu;
     wire          clkIn     =  clk;
     wire          clkEnable =  key_sw[1]; //  s3
-    wire [  3:0 ] clkDevide =  4'b1000;
+    wire [  3:0 ] clkDevide =  4'b0010;
     wire [  4:0 ] regAddr   =  key_sw[2] ? 5'h0 : 5'ha; //  s2
     wire [ 31:0 ] regData;
     wire [ 31:0 ] cycleCnt;
@@ -44,7 +44,7 @@ module rzrd
     wire [ 31:0 ] h7segment;
     wire clkHex;
 
-    assign h7segment = key_sw[3] ? regData : cycleCnt;
+    assign h7segment = key_sw[3] ? cycleCnt : regData;
 
     sm_clk_divider hex_clk_divider
     (
