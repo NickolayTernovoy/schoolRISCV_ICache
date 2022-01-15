@@ -44,7 +44,7 @@ L0:     or      t2, t1, t0     ## b = y | m;
 L1:     srl     t0, t0, t5     ## m >>= 2
         bnez    t0, L0         ## if(m != 0) goto L0
         mv      a0, t1         ## return y
-        sw 	a0, 0x200          ## cycle_cnt finish
+        sw 	zero, 0x200          ## cycle_cnt finish
 
 end:    beqz    zero,  end     ## while(1);
 	
