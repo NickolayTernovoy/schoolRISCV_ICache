@@ -10,11 +10,13 @@
 
 `timescale 1 ns / 100 ps
 
-`include "sr_cpu.vh"
+`include "../src/sr_cpu.vh"
 
 `ifndef SIMULATION_CYCLES
     `define SIMULATION_CYCLES 120
 `endif
+
+
 
 module sm_testbench;
 
@@ -27,8 +29,11 @@ module sm_testbench;
     wire        cpuClk;
 
     // ***** DUT start ************************
+    // CACHE_ENABLE 1 -> ON
+    // CACHE_ENABLE 0 -> OFF
+    localparam  CACHE_EN = 1'b1;
 
-    sm_top sm_top
+    sm_top #(.CACHE_EN(CACHE_EN)) sm_top
     (
         .clkIn     ( clk     ),
         .rst_n     ( rst_n   ),
@@ -36,7 +41,8 @@ module sm_testbench;
         .clkEnable ( 1'b1    ),
         .clk       ( cpuClk  ),
         .regAddr   ( 5'b0    ),
-        .regData   (         )
+        .regData   (         ),
+        .cycleCnt_o(         )
     );
 
     defparam sm_top.sm_clk_divider.bypass = 1;
@@ -120,7 +126,7 @@ module sm_testbench;
 
         $write("\n");
     
- //       cycle = cycle + 1;
+        cycle = cycle + 1;
 
 //        if (cycle > `SIMULATION_CYCLES)
 //        begin

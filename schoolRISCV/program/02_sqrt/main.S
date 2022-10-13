@@ -21,10 +21,14 @@
 
         .text
 
-init:   li      a0, 0          ## calculation result reset
+init:  
+        li      a2, 1
+        sw 	a2, 0x200          ## cycle_cnt start
+        li      a0, 0          ## calculation result reset
         li      a1, 82         ## x = 82
         li      t4, 1          ## shift amount for y >>= 1
         li      t5, 2          ## shift amount for y >>= 2
+        
 
 sqrt:   lui     t0, 0x40000    ## m = 0x40000000
         mv      t1, zero       ## y = 0
@@ -40,5 +44,7 @@ L0:     or      t2, t1, t0     ## b = y | m;
 L1:     srl     t0, t0, t5     ## m >>= 2
         bnez    t0, L0         ## if(m != 0) goto L0
         mv      a0, t1         ## return y
+        sw 	zero, 0x200          ## cycle_cnt finish
 
 end:    beqz    zero,  end     ## while(1);
+	

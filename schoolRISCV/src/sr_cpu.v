@@ -31,6 +31,7 @@ module sr_cpu
     wire  [1:0] aluSrc;
     wire        wdSrc;
     wire  [2:0] aluControl;
+    wire rfUpd;
 
     //instruction decode wires
     wire [ 6:0] cmdOp;
@@ -93,6 +94,7 @@ module sr_cpu
     wire [31:0] rd1;
     wire [31:0] rd2;
     wire [31:0] wd3;
+    assign rfUpd = regWrite & im_drdy;
 
     sm_register_file rf (
         .clk        ( clk          ),
@@ -104,7 +106,7 @@ module sr_cpu
         .rd1        ( rd1          ),
         .rd2        ( rd2          ),
         .wd3        ( wd3          ),
-        .we3        ( regWrite     )
+        .we3        ( rfUpd        )
     );
 
 
