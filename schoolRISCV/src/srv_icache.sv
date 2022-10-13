@@ -27,7 +27,7 @@
     input  logic  [127:0]  ext_data_i
 );
 
-localparam NWAYS = 2;
+localparam NWAYS = 4;
 localparam L1I_SIZE = 128;
 localparam TAG_WIDTH  = 32 - $clog2(L1I_SIZE/32);
 
@@ -116,7 +116,7 @@ genvar way_idx;
 
   // Refill logic
 
-   assign cache_vict[0] = (NWAYS==1) ? '1 : ( &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0]);
+  assign cache_vict[0] = (NWAYS==1) ? '1 : ( &(cache_valid) ? ~cache_plru[0] : ~cache_valid[0]);
 
   generate
     for (way_idx = 1; way_idx < NWAYS; way_idx = way_idx + 1) begin : g_vict

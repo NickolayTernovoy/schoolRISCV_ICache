@@ -26,6 +26,7 @@ add wave /sm_testbench/sm_top/rst_n
 add wave -color #ff9911 -radix hex -group Cache_IO  \
 /sm_testbench/sm_top/sm_icache/imem_req_i \
 /sm_testbench/sm_top/sm_icache/imAddr     \
+/sm_testbench/sm_top/sm_icache/cache_tag_ff \
 /sm_testbench/sm_top/sm_icache/imData     \
 /sm_testbench/sm_top/sm_icache/im_drdy    \
 /sm_testbench/sm_top/sm_icache/ext_addr_o \

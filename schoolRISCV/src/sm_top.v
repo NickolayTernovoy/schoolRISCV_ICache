@@ -11,7 +11,7 @@
 //hardware top level module
 module sm_top
 #( 
-  parameter CACHE_EN = 1
+  parameter CACHE_EN = 1'b0
 )
 (
     input           clkIn,
