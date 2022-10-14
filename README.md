@@ -8,6 +8,6 @@
 * [Богдана Тищук](https://www.linkedin.com/in/bogdana-tishchuk-905683159/)
 * [Павел Куроедов](https://www.linkedin.com/in/pavel-kuroedov/)
 
-Telegram канал Школлы синтеза:
+Telegram канал Школы синтеза:
 * [анонсы занятий](https://t.me/ChipDesignSchool)
 * [чат для Q&A](https://t.me/DigitalDesignSchool)
